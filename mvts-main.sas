@@ -83,9 +83,40 @@ RUN;
 PROC ARIMA DATA=work.data_num;
     /* IDENTIFY VAR=ppi_num(1); */ /* if we want first difference directly*/
     IDENTIFY VAR=costs_num;
+RUN; /* note that we see clear seasonality for costs */
+
+/* unit root testing */
+
+/* PRI: could be stationary - have to test with ADF without trend component */
+proc autoreg;
+    model costs_num = / stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
+    model pri_num = / stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
+run;
+quit;
+
+/*Test Unit Root for first difference of ppi and cpi*/
+/* note that CPI and PPI show strong trends and Cost Data shows non-constant variance due to seasonality, 
+hence for all of these we apply the first difference or log difference */
+
+/* first difference (cpi, ppi) and log (for costs)*/
+DATA work.data_num;
+    SET work.data_num;
+    costs_fd = DIF(costs_num);
+    cpi_fd = DIF(cpi_num);
+    ppi_fd = DIF(ppi_num); 
 RUN;
 
-/* note that we see clear seasonality for costs */
+
+proc autoreg;
+    model costs_fd = / stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
+    model cpi_fd = / stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
+    model ppi_fd = / stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
+run;
+quit;
+
+
+
+
 
 
 
