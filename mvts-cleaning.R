@@ -1,4 +1,4 @@
-# Clean the fucking data set before inserting into SAS
+# Clean the data set before inserting into SAS
 
 library(readr)
 library(dplyr)
@@ -20,9 +20,16 @@ merged$costs <- trimws(merged$costs)
 merged$costs <- gsub("[^0-9.-]", "", merged$costs)
 merged[merged == ""] <- NA
 
-write.csv(merged, "merged_clean.csv")
+merged$costs = as.numeric(merged$costs)
+merged$ppi = as.numeric(merged$ppi)
+merged$cpi = as.numeric(merged$cpi)
+merged$pri = as.numeric(merged$pri)
 
+merged[is.na(merged) == TRUE] <- ""
 
+write.table(merged, "merged_clean.csv", 
+            sep = ",", row.names = FALSE, col.names = TRUE, 
+            quote = FALSE, na = "")
 
 
 
