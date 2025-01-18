@@ -7,7 +7,6 @@ Der SAS Code, der für die eigentliche Analyse genutzt wird, ist der "mvts-main.
 Noch zu tun ist: 
 
 Analysis/Modelling:
-- Unit Root Tests und Differenzieren
 - AR/MA p-q Wahl und Modelling
 - Falls ARMA: Iterative p-q Selektion
 - Cointegration Test
