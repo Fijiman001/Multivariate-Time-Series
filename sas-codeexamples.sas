@@ -56,8 +56,8 @@ loggdp=log(GDPC1_20221222);
 logpce=log(PCECC96);
 run;
 proc autoreg;
-model loggdp =/stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
-model logpce =/stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
+model loggdp =/stationarity = (ADF, PHILLIPS, ERS, NG=8, KPSS=(KERNEL=NW auto));
+model logpce =/stationarity = (ADF, PHILLIPS, ERS, NG=8, KPSS=(KERNEL=NW auto));
 run; 
 quit;
 
@@ -74,6 +74,7 @@ QUIT;
 data a;set a;by date;
 proc reg;
 model logWR = productivity/DW;
+/* computation of Durban watson above, take f.d. of residuals and lagged residuals, test */
 output out=b R=res;
 run;
 quit;
@@ -84,7 +85,7 @@ run;
 quit;
 data b;set b; by date;
 
-/* ADF for non-cointegration */
+/* ADF for non-cointegration - test that residuals are I(1) */
 
 /* lag order selection */
 dres = dif(res);
@@ -102,6 +103,7 @@ run;
 data b;set b;
 if dres8^=.;
 proc reg;
+/* res1 = level of residual, + project on past 8 lags. test that coefficients are jointly 0 for each specific specification */
 model dres = res1 dres1-dres8;
 d1: test dres8;
 d2: test dres7-dres8;
@@ -115,22 +117,27 @@ run;
 quit;
 
 data b;set b; by date;
+/*  Run ADF with correct number of lags  */
 /* lag order selected : 1 */ 
 proc reg;
 model dres = res1 dres1;
 run;
 quit;
 
+/*  VAR and granger causality relationships  */
+
 data a;set a;by date; 
 dlogWR = dif(logWR);
 dprod = dif(productivity);
 proc varmax;
    id date interval=qtr;
-   model dlogWR dprod  / p=8 noint lagmax=9
-                 print=(estimates diagnose);
+   /* max p = 8, no MA if Q=0, Type of information criteria: Type = HQC, */
+   model dlogWR dprod  / Minic=(p=8, Q=0, Type = HQC) lagmax=9
+                 print=(estimates diagnose impulse = ORTH);
+    /* Look at both directions of granger causality,   */
    causal group1=(dlogWR) group2=(dprod);
    causal group1=(dprod) group2=(dlogWR);
-   output out=for lead=4;
+   output out=for lead=4; /* 1 year forecast here */
 run;
 quit;
 
