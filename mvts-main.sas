@@ -1,10 +1,10 @@
 /* MVTS Project - January 2025 */
 
-/* Alexander Köhler, M2 EGR */
-/* Cerstin Berner, M2 EEE */
+/* Alexander Köhler, M2 EGR  u64130652 */ 
+/* Cerstin Berner, M2 EEE u64114842 */
 
 /* import data */
-PROC IMPORT DATAFILE="/home/u64114842/sasuser.v94/mvts-project-2025/merged_clean.csv"
+PROC IMPORT DATAFILE="/home/u64130652/sasuser.v94/mvts-project-2025/merged_clean_adjusted.csv"
     OUT=work.data
     DBMS=CSV
     REPLACE;
@@ -24,9 +24,10 @@ DATA work.data_num;
     cpi_num = INPUT(cpi, BEST12.);
     ppi_num = INPUT(ppi, BEST12.);
     pri_num = INPUT(pri, BEST12.); 
-    date_ = INPUT(date, ddmmyy10.); ;
-    DROP cpi ppi costs pri date; 
-    FORMAT date_ date9.;  /* Example format: 01JAN2006 */
+    temp_date = put(date, 10.);
+    date_ = input(temp_date, MMDDYYYY10.);
+    DROP cpi ppi costs pri temp_date date VAR6; 
+    FORMAT date_ yymmdd10.;  /* Example format: 01JAN2006 */
 RUN;
 
 PROC CONTENTS DATA=work.data_num;
@@ -110,27 +111,93 @@ DATA work.data_num;
     ppi_fd = DIF(ppi_num); 
     ppi_log = Log(ppi_num);
     ppi_logfd = DIF(ppi_log);
+    
+    /* also take log f.d. of PRI as it is not stationary*/
+   	pri_fd = DIF(pri_num);
 RUN;
 
-
+/* take log cost and not fd. of costs, as with f.d. value is 0 unless there was a value in the period before.*/
 proc autoreg;
-    model costs_logfd = / stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
+    model costs_log = / stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
     model cpi_logfd = / stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
     model ppi_logfd = / stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
+    model pri_fd = / stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
+run;
+quit;
+
+/* Overview:
+costs_log is stil not stationary, maybe centre around the trend?
+CPI is stationary
+PPI should be stationary if we exclude the extreme spike at the end
+PRI is stationary
+
+In any case, below is the code for a VAR model estimation.
+We first need to ensure no cointegration is present between our original time series.
+ */
+
+
+/* Log transformation and differencing for stationarity analysis */
+proc arima data=work.data_num;
+    identify var=cpi_logfd stationarity=(adf=(0,1,2,3,4,5));
+    identify var=costs_log stationarity=(adf=(0,1,2,3,4,5));
+    identify var=pri_fd stationarity=(adf=(0,1,2,3,4,5));
+run;
+/* only costs ADF test is not rejected? */
+
+
+/* Ensure there is no cointegration between the series, Note: we need to ensure that the variables are stationary!!!! */
+proc varmax data=work.data_num;
+    id date_ interval=month;
+    model costs_log cpi_logfd pri_fd / cointtest=(johansen);
+run;
+quit;
+
+
+
+/* We create a filtered dataset only looking at the time period after 2005: as this is when we have PRI data */
+data work.data_filtered;
+    set work.data_num; 
+    where date_ >= input('2005-01-01', yymmdd10.) and date_ <= input('2019-01-01', yymmdd10.); /* Keep data between 2005 and 2019 */
+    keep date_ costs_log cpi_logfd pri_fd;
+run;
+
+
+proc varmax data=work.data_filtered;
+    id date_ interval=month;
+    model costs_log cpi_logfd pri_fd / cointtest=johansen;
+run;
+quit;
+
+/* Estimate the VAR model and generate impulse response functions */
+proc varmax data=work.data_num;
+    id date_ interval=month;
+    model costs_log cpi_logfd pri_fd / p=8 lagmax=9 
+                                      minic=(p=8 q=0 type=HQC)
+                                      print=(estimates diagnose impulse=ORTH);
+    causal group1=(pri_fd) group2=(costs_log);
+    causal group1=(pri_fd) group2=(cpi_logfd costs_log);
+    output out=forecast lead=6; /* 6-month forecast */
+run;
+quit;
+
+/* Plot the impulse response functions */
+proc sgplot data=forecast;
+    where _TYPE_="IMPULSE"; /* Filter impulse response data */
+    series x=_NAME_ y=pri_fd / group=VAR lineattrs=(pattern=solid);
+    series x=_NAME_ y=cpi_logfd / group=VAR lineattrs=(pattern=dash);
+    series x=_NAME_ y=costs_log / group=VAR lineattrs=(pattern=dot);
+    xaxis label="Lag" grid;
+    yaxis label="Response" grid;
 run;
 quit;
 
 
 
 
-
-
-
-
-
-
-
 PROC PRINT DATA=work.data_num;  
+RUN;
+
+
 RUN;
 
 
