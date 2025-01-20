@@ -6,7 +6,7 @@ Der SAS Code, der für die eigentliche Analyse genutzt wird, ist der "mvts-main.
 
 Cerstin, 20. Januar: In mvts-main wurden die unit root tests mit log-difference wiederholt für alle drei variablen. Ich suche noch nach einem geigneten Filter für Costs, deswegen sind die daten gerade erst in der log difference.
 
-Alex, 20. Januar: Bin am VAR model programmieren und cointegration tests am machen. Code funktioniert noch nicht, wollte auch temporal spread of data limitieren zu 2005 bis ende 2018, da wir für die Zeit PRI und Cost daten haben. da ist mir aufgefallen, dass der jetzige SAS Code die "Dates" nicht richtig handelt, also korrigiere ich dies noch. WICHTIG!!!!: benutze bitte die neue Datei mit dem Code, darin wurden die Daten neu Formatiert. Code für Cointegration muss nich geschrieben werde, die Daten umformatierung hat zu lange gedauert.... Am Ende des Codes wird ein neuer datensatz erstellt für die Modelle: "data_filtered", der erst nach 2005 bis 2019 Daten beinhaltet.
+Alex, 20. Januar: Bin am VAR model programmieren und cointegration tests am machen. Zeitspanne der Data wurde reduziert auf 2005 bis ende 2018 ("data_filtered"), da wir für die Zeit PRI und Cost daten haben. Ich habe das Daten Format der .csv file geändert und den Code, sodass SAS die Daten jetzt richtig lest. WICHTIG!!!!: benutze bitte die neue Datei mit dem Code, darin wurden die Daten neu Formatiert. Code für Cointegration muss nich geschrieben werde, die Daten umformatierung hat zu lange gedauert...
 
 Noch zu tun ist: 
 
