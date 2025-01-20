@@ -94,25 +94,32 @@ proc autoreg;
 run;
 quit;
 
-/*Test Unit Root for first difference of ppi and cpi*/
-/* note that CPI and PPI show strong trends and Cost Data shows non-constant variance due to seasonality, 
-hence for all of these we apply the first difference or log difference */
+
+/*Test Unit Root for first log difference of ppi and cpi*/
 
 /* first difference (cpi, ppi) and log (for costs)*/
 DATA work.data_num;
     SET work.data_num;
-    costs_fd = DIF(costs_num);
+    costs_log = Log(costs_num);
+    costs_logfd = DIF(costs_log);
+    
     cpi_fd = DIF(cpi_num);
+    cpi_log = Log(cpi_num);
+    cpi_logfd = DIF(cpi_log);
+    
     ppi_fd = DIF(ppi_num); 
+    ppi_log = Log(ppi_num);
+    ppi_logfd = DIF(ppi_log);
 RUN;
 
 
 proc autoreg;
-    model costs_fd = / stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
-    model cpi_fd = / stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
-    model ppi_fd = / stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
+    model costs_logfd = / stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
+    model cpi_logfd = / stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
+    model ppi_logfd = / stationarity = (ADF, PHILLIPS, ERS, NG, KPSS=(KERNEL=NW auto));
 run;
 quit;
+
 
 
 
