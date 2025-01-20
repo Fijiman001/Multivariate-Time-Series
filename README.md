@@ -4,6 +4,9 @@ Die Daten, die für SAS genutzt werden nennen sich 'merged_clean'. Der cleaning 
 
 Der SAS Code, der für die eigentliche Analyse genutzt wird, ist der "mvts-main.sas" Code. Ich habe da schon mal die Daten importiert und umgewandelt und die Plots erstellt. 
 
+Cerstin, 20. Januar: In mvts-main wurden die unit root tests mit log-difference wiederholt für alle drei variablen. Ich suche noch nach einem geigneten Filter für Costs, deswegen sind die daten gerade erst in der log difference.
+
+
 Noch zu tun ist: 
 
 Analysis/Modelling:
