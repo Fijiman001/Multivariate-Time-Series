@@ -1,4 +1,4 @@
-/* MVTS Project - January 2025 */
+ /* MVTS Project - January 2025 */
 
 /* Alexander Köhler, M2 EGR  u64130652 */ 
 /* Cerstin Berner, M2 EEE u64114842 */
@@ -145,15 +145,6 @@ run;
 /* only costs ADF test is not rejected? */
 
 
-/* Ensure there is no cointegration between the series, Note: we need to ensure that the variables are stationary!!!! */
-proc varmax data=work.data_num;
-    id date_ interval=month;
-    model costs_log cpi_logfd pri_fd / cointtest=(johansen);
-run;
-quit;
-
-
-
 /* We create a filtered dataset only looking at the time period after 2005: as this is when we have PRI data */
 data work.data_filtered;
     set work.data_num; 
@@ -161,18 +152,28 @@ data work.data_filtered;
     keep date_ costs_log cpi_logfd pri_fd;
 run;
 
-
+/* Ensure there is no cointegration between the series, Note: we need to ensure that the variables are stationary!!!! */
 proc varmax data=work.data_filtered;
     id date_ interval=month;
     model costs_log cpi_logfd pri_fd / cointtest=johansen;
 run;
 quit;
 
+/*Wir sollten versuchen NAs mit 0 zu ersetzen?*/
+data work.data_filtered;
+    set work.data_filtered;
+    array num_vars _numeric_;  /* Create an array of all numeric variables */
+    do i = 1 to dim(num_vars);
+        if num_vars[i] = . then num_vars[i] = 0;  /* Replace missing with 0 */
+    end;
+    drop i;  /* Drop the loop variable */
+run;
+
 /* Estimate the VAR model and generate impulse response functions */
-proc varmax data=work.data_num;
+proc varmax data=work.data_filtered;
     id date_ interval=month;
     model costs_log cpi_logfd pri_fd / p=8 lagmax=9 
-                                      minic=(p=8 q=0 type=HQC)
+                                      minic=(p=8 q=8 type=HQC)
                                       print=(estimates diagnose impulse=ORTH);
     causal group1=(pri_fd) group2=(costs_log);
     causal group1=(pri_fd) group2=(cpi_logfd costs_log);
@@ -194,10 +195,5 @@ quit;
 
 
 
-PROC PRINT DATA=work.data_num;  
+PROC PRINT DATA=work.data_filtered;  
 RUN;
-
-
-RUN;
-
-
