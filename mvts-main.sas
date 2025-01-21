@@ -114,6 +114,8 @@ DATA work.data_num;
     
     /* also take log f.d. of PRI as it is not stationary*/
    	pri_fd = DIF(pri_num);
+   	pri_log = Log(pri_num);
+   	pri_logfd = DIF(pri_log);
 RUN;
 
 /* take log cost and not fd. of costs, as with f.d. value is 0 unless there was a value in the period before.*/
@@ -149,7 +151,7 @@ run;
 data work.data_filtered;
     set work.data_num; 
     where date_ >= input('2005-01-01', yymmdd10.) and date_ <= input('2019-01-01', yymmdd10.); /* Keep data between 2005 and 2019 */
-    keep date_ costs_log cpi_logfd pri_fd;
+    keep date_ costs_log cpi_logfd pri_fd pri_num cpi_log ppi_log ppi_logfd;
 run;
 
 /*Wir sollten versuchen NAs mit 0 zu ersetzen?*/
@@ -165,7 +167,7 @@ run;
 /* Ensure there is no cointegration between the series, Note: we need to ensure that the variables are stationary for later!!!! */
 proc varmax data=work.data_filtered;
     id date_ interval=month;
-    model costs_log cpi_logfd pri_fd / p=8 cointtest=(johansen=(type=trace));
+    model costs_log cpi_log pri_num / p=8 cointtest=(johansen=(type=trace));
 run;
 quit;
 /* We reject Cointegration, no rank of cointegraion, can estimate as a VAR in difference. */
@@ -179,6 +181,19 @@ proc varmax data=work.data_filtered;
     causal group1=(pri_fd) group2=(costs_log);
     causal group1=(pri_fd) group2=(cpi_logfd costs_log);
     output out=forecast lead=6; /* 6-month forecast */
+run;
+quit;
+
+proc varmax data=work.data_filtered;
+    id date_ interval=month;
+    model cpi_logfd pri_fd = costs_log cpi_log pri_num / p=8 nocurrentx xlag=1;
+run;
+quit;
+
+/*PPI robustness */
+proc varmax data=work.data_filtered;
+    id date_ interval=month;
+    model ppi_logfd pri_fd = costs_log ppi_log pri_num / p=8 nocurrentx xlag=1;
 run;
 quit;
 
