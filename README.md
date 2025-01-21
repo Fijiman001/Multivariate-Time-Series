@@ -12,6 +12,8 @@ Alex, 21. Januar: VAR model estimation und kointegrations Tests Code läuft jetz
 
 Cerstin, 21. Januar: Ich habe mir sein empirical example noch mal angeschaut und den folgenden Workflow erarbeitet, wonach die analyse stattfinden sollte:
 
+Alex 21. Januar: habe den Code noch mal überarbeiten, ist jetzt strukturierter. Ich sehe deine Checklist / steps to follow, und do Code macht eigentlich, was du geschrieben hast, aber lass uns das morgen besprechen. IRF wurden auch jetzt geplotted, Granger causality wurde auch gemacht. Gucke dir gerne auch meine Kommentare im Code, diese beschreiben die Resultate. Alles im allem sollten wir fast fertig sein und ich fange morgen mit dem Schreiben an. Ich lade auch die Screenshots von den Resultaten hoch. 
+
 1) Check time series visually
 2) Check for unit roots
 3) Johansen Cointegration Test (For Multiple Variables) 
