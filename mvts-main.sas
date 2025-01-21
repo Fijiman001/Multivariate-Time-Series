@@ -152,28 +152,29 @@ data work.data_filtered;
     keep date_ costs_log cpi_logfd pri_fd;
 run;
 
-/* Ensure there is no cointegration between the series, Note: we need to ensure that the variables are stationary!!!! */
-proc varmax data=work.data_filtered;
-    id date_ interval=month;
-    model costs_log cpi_logfd pri_fd / cointtest=johansen;
-run;
-quit;
-
 /*Wir sollten versuchen NAs mit 0 zu ersetzen?*/
 data work.data_filtered;
     set work.data_filtered;
     array num_vars _numeric_;  /* Create an array of all numeric variables */
     do i = 1 to dim(num_vars);
-        if num_vars[i] = . then num_vars[i] = 0;  /* Replace missing with 0 */
+        if num_vars[i] = . then num_vars[i] = 1; /* Replace missing with 1, as log */
     end;
     drop i;  /* Drop the loop variable */
 run;
+
+/* Ensure there is no cointegration between the series, Note: we need to ensure that the variables are stationary for later!!!! */
+proc varmax data=work.data_filtered;
+    id date_ interval=month;
+    model costs_log cpi_logfd pri_fd / p=8 cointtest=(johansen=(type=trace));
+run;
+quit;
+/* We reject Cointegration, no rank of cointegraion, can estimate as a VAR in difference. */
 
 /* Estimate the VAR model and generate impulse response functions */
 proc varmax data=work.data_filtered;
     id date_ interval=month;
     model costs_log cpi_logfd pri_fd / p=8 lagmax=9 
-                                      minic=(p=8 q=8 type=HQC)
+                                      minic=(p=4 q=4 type=HQC)
                                       print=(estimates diagnose impulse=ORTH);
     causal group1=(pri_fd) group2=(costs_log);
     causal group1=(pri_fd) group2=(cpi_logfd costs_log);
@@ -181,8 +182,21 @@ proc varmax data=work.data_filtered;
 run;
 quit;
 
-/* Plot the impulse response functions */
-proc sgplot data=forecast;
+/*  We look at the fit of our VAR model, Ich verstehe nicht weshalb Gregoir xlag=1 und nocurrentx benutzt in seinem Code.
+Aber es funktioniert.... */
+proc varmax data=work.forecast plots=residual(residual normal);
+model costs_log cpi_logfd pri_fd/ p=8 nocurrentx xlag=1 print=(diagnose);
+run;
+/* 
+Von den Graphiken / Resultaten her sieht es aus also ob wir keine signifikanten Koeffizienten habe, außer für den PRI Index,
+welcher eine gewisse Autokorrelation zeigt. Fazit, wir sehen keine signifikante Korrelation zwischen Unwetter verursachten Kosten
+und Versicherung CPI / auch nicht von PRI auf CPI. Unsere Hypothese wird nicht von den Daten unterstützt, vermutlich auch wegen der
+Daten Selektion und die Datentransformationen die wir machen.
+*/
+
+
+/* Plot the impulse response functions, not working currently */
+proc sgplot data=work.forecast;
     where _TYPE_="IMPULSE"; /* Filter impulse response data */
     series x=_NAME_ y=pri_fd / group=VAR lineattrs=(pattern=solid);
     series x=_NAME_ y=cpi_logfd / group=VAR lineattrs=(pattern=dash);
@@ -193,7 +207,6 @@ run;
 quit;
 
 
-
-
 PROC PRINT DATA=work.data_filtered;  
 RUN;
+
