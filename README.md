@@ -10,13 +10,37 @@ Alex, 20. Januar: Bin am VAR model programmieren und cointegration tests am mach
 
 Alex, 21. Januar: VAR model estimation und kointegrations Tests Code läuft jetzt, VAR Residuen analyse wurde auch programmiert. Was fehlt sind noch die Impulse Response Funktions. Unsere Resultate zeigen jedoch, dass wir (im Moment mit den jetzigen Daten und den transformationen die wir gemacht haben) keine signifikante Korrelation zwischen Costs und CPI bzw. zwischen PRI und CPI sehen. Können wir später besprechen. Robustness mit PPI und mit daten bis 2023? sollte noch gemacht werden, vielleicht nur zwischen CPI und PRI oder PPI und PRI.
 
-Noch zu tun ist: 
+Cerstin, 21. Januar: Ich habe mir sein empirical example noch mal angeschaut und den folgenden Workflow erarbeitet, wonach die analyse stattfinden sollte:
 
-Analysis/Modelling:
-- AR/MA p-q Wahl und Modelling
-- Falls ARMA: Iterative p-q Selektion
-- Cointegration Test
-- VAR Model Estimation
+1) Check time series visually
+2) Check for unit roots
+3) Johansen Cointegration Test (For Multiple Variables) 
+	-> Yes: Do VECM, No: VAR (potentially in first difference)
+
+
+4) ADF on residuals - Engle-Granger Cointegration Test for two variables:
+
+	Run Regression Between the Two Non-Stationary Series; residuals represent the deviations from the estimated long-run relationship.
+		
+	Do ADF on Residuals:
+		
+		Null Hypothesis: The residuals have a unit root (i.e., are non-stationary) → No cointegration.
+
+		Alternative Hypothesis: The residuals are stationary (I(0)) → Cointegration exists.
+
+5) Do Var estimation if not cointegrated, Vecm if cointegrated 
+6) DO Granger Causality Test To determine whether one variable 
+	can predict another (e.g., does productivity cause wages?)
+	
+	Null Hypothesis: Variable in group1 does not Granger-cause variable in group2.
+	
+	If rejected (p-value < 0.05) → Granger causality exists.
+
+7) Refine lag selection using AIC/BIC in PROC VARMAX. Note here: He sets specific lags in his examples, e.g. maxp = 8 but I am very sure that he had a general idea about his TS, this is not arbitrary. I suggest we use HQC to let SAS define the model parameters.
+
+8) After Estimating a VAR or VECM, We Perform an Impulse Response Function (IRF) Analysis.
+   
+
 
 Report: 
 - Introduction
