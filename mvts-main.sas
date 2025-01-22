@@ -130,9 +130,11 @@ proc autoreg data=work.data_filtered;
     model ppi_logfd = / stationarity = (ADF, PHILLIPS, NG, KPSS=(KERNEL=NW auto));
 run;
 
-/* cpi_logfd: we reject unit root now, and can thus use it in our VAR model */
+/*  cpi_logfd: we reject unit root now, and can thus use it in our VAR model
+	ppi_logfd: we reject unit root now, and can thus use it in our VAR model
+ */
 
-
+/* ------------------------------------------------------------------------------------------------- */
 
 /* 
 To double check, we test for a cointegration relationship between cpi_num and costs, in case costs are in reality I(1). (Robustness check)
@@ -201,8 +203,10 @@ proc varmax data=work.data_filtered;
     model costs_num cpi_num/ p=8 cointtest=(johansen=(type=trace));
     model cost_num ppi_num/ p=8 cointtest=(johansen=(type=trace));
 run;
-/* We reject Cointegration, full rank of cointegraion, can estimate as a VAR in difference. */
+/*  We reject Cointegration, full rank of cointegraion, can estimate as a VAR in difference. 
+	This is for both CPI and PPI regaerding costs */
 
+/* ------------------------------------------------------------------------------------------------- */
 
 /* We proceed with the VAR model estimations, using cpi in FD(log)*/
 
@@ -255,3 +259,5 @@ proc varmax data=work.data_filtered plots=(impulse forecast);
     output out=work.forecast lead=6; /* 6-month forecast */
 run;
 quit;
+
+
