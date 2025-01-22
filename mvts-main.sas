@@ -122,10 +122,12 @@ As CPI is the only integrated variable, we difference it to model it in our VAR 
 DATA work.data_filtered;
     SET work.data_filtered;
     cpi_logfd = DIF(Log(cpi_num));
+    ppi_logfd = DIF(Log(ppi_num));
 RUN;
 
 proc autoreg data=work.data_filtered;
     model cpi_logfd = / stationarity = (ADF, PHILLIPS, NG, KPSS=(KERNEL=NW auto));
+    model ppi_logfd = / stationarity = (ADF, PHILLIPS, NG, KPSS=(KERNEL=NW auto));
 run;
 
 /* cpi_logfd: we reject unit root now, and can thus use it in our VAR model */
@@ -153,7 +155,7 @@ proc autoreg data=work.reg_results;
     model res = / stationarity=(ADF, PHILLIPS, NG, KPSS=(KERNEL=NW auto));
 run;
 
-data b; set b; by date_; 
+data reg_results; set reg_results; by date_; 
     /* ADF for non-cointegration */ 
     /* lag order selection */ 
     dres = dif(res); 
@@ -168,7 +170,7 @@ data b; set b; by date_;
     dres8 = lag8(dif(res)); 
 run;
 /* first lag of residual is significant, for residual explanation, 2nd at 10% */
-data b; set b; 
+data reg_results; set reg_results; 
 if dres8^= .;
 proc reg;
 	model dres = res1 dres1-dres8;
@@ -181,7 +183,7 @@ proc reg;
 	d7: test dres2-dres8;
 	d8: test dres1-dres8;
 run;
-data b; set b; by date_; /* test select 1 lag, as reject H0: lag8 to lag1 = 0 for this one*/
+data reg_results; set reg_results; by date_; /* test select 1 lag, as reject H0: lag8 to lag1 = 0 for this one*/
 proc reg;
 	model dres = res1 dres1;
 run;
@@ -197,6 +199,7 @@ So the time series costs_num and cpi_num are not cointegrated as the residuals f
 proc varmax data=work.data_filtered;
     id date_ interval=month;
     model costs_num cpi_num/ p=8 cointtest=(johansen=(type=trace));
+    model cost_num ppi_num/ p=8 cointtest=(johansen=(type=trace));
 run;
 /* We reject Cointegration, full rank of cointegraion, can estimate as a VAR in difference. */
 
@@ -207,6 +210,7 @@ proc arima data=work.data_filtered;
     identify var=cpi_logfd stationarity=(adf=(0,1,2,3,4,5));
     identify var=costs_num stationarity=(adf=(0,1,2,3,4,5));
     identify var=pri_num stationarity=(adf=(0,1,2,3,4,5));
+    identify var=ppi_logfd stationarity=(adf=(0,1,2,3,4,5));
 run;
 
 
@@ -214,11 +218,15 @@ run;
 /* Estimate the VAR model and generate impulse response functions */
 proc varmax data=work.data_filtered plots=(impulse forecast);
     id date_ interval=month;
-    model costs_num cpi_logfd pri_num / p=8 lagmax=9 
-                                      minic=(p=4 q=4 type=HQC)
+    model costs_num cpi_logfd pri_num / p=12 lagmax=13 
+                                      minic=(p=8 q=8 type=HQC)
                                       print=(estimates diagnose impulse=ORTH);
     causal group1=(costs_num) group2=(cpi_logfd);
+    causal group1=(cpi_logfd) group2=(costs_num);
     causal group1=(costs_num) group2=(pri_num);
+    causal group1=(cpi_logfd) group2=(pri_num);
+    causal group1=(costs_num cpi_logfd) group2=(pri_num);
+    causal group1=(pri_num) group2=(costs_num);
     causal group1=(pri_num) group2=(cpi_logfd);
     output out=work.forecast lead=6; /* 6-month forecast */
 run;
@@ -227,16 +235,23 @@ quit;
  Modell basierend auf HQC und minimum likelihood wäre VARMA(1,1), AR1 und MA1.
  VAR cross-coefficients not significant though.
  no cross-correlation of residuals
- 
+ The null hypothesis of the Granger causality test is that GROUP1 is influenced only by itself, and not by GROUP2
  */
 
 
-
 /*PPI robustness */
-proc varmax data=work.data_filtered;
+proc varmax data=work.data_filtered plots=(impulse forecast);
     id date_ interval=month;
-    model ppi_logfd pri_fd = costs_log ppi_log pri_num / p=8 nocurrentx xlag=1;
+    model costs_num ppi_logfd pri_num / p=12 lagmax=13 
+                                      minic=(p=8 q=8 type=HQC)
+                                      print=(estimates diagnose impulse=ORTH);
+    causal group1=(costs_num) group2=(ppi_logfd);
+    causal group1=(ppi_logfd) group2=(costs_num);
+    causal group1=(costs_num) group2=(pri_num);
+    causal group1=(ppi_logfd) group2=(pri_num);
+    causal group1=(costs_num ppi_logfd) group2=(pri_num);
+    causal group1=(pri_num) group2=(costs_num);
+    causal group1=(pri_num) group2=(ppi_logfd);
+    output out=work.forecast lead=6; /* 6-month forecast */
 run;
 quit;
-
-
