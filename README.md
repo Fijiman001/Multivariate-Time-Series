@@ -20,6 +20,8 @@ Alex 21. Januar: habe den Code noch mal überarbeiten, ist jetzt strukturierter.
 
 Alex 22. Januar: Ich habe das Overleaf erstellt und bin gerade noch am schreiben: https://www.overleaf.com/8283938534mprnydhkrbff#87f42a
 
+## Methodological Procedure
+
 1) Check time series visually
 2) Check for unit roots
 3) Johansen Cointegration Test (For Multiple Variables) 
@@ -48,7 +50,7 @@ Alex 22. Januar: Ich habe das Overleaf erstellt und bin gerade noch am schreiben
 
 8) After Estimating a VAR or VECM, We Perform an Impulse Response Function (IRF) Analysis.
    
-
+## To-Do in Report
 
 Report: 
 - Introduction
