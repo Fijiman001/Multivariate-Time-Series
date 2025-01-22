@@ -1,5 +1,9 @@
 # Multivariate-Time-Series
 
+## Overleaf: https://www.overleaf.com/8283938534mprnydhkrbff#87f42a
+
+## Overview
+
 Die Daten, die für SAS genutzt werden nennen sich 'merged_clean'. Der cleaning Code ist in der R file.
 
 Der SAS Code, der für die eigentliche Analyse genutzt wird, ist der "mvts-main.sas" Code. Ich habe da schon mal die Daten importiert und umgewandelt und die Plots erstellt. 
@@ -13,6 +17,10 @@ Alex, 21. Januar: VAR model estimation und kointegrations Tests Code läuft jetz
 Cerstin, 21. Januar: Ich habe mir sein empirical example noch mal angeschaut und den folgenden Workflow erarbeitet, wonach die analyse stattfinden sollte:
 
 Alex 21. Januar: habe den Code noch mal überarbeiten, ist jetzt strukturierter. Ich sehe deine Checklist / steps to follow, und do Code macht eigentlich, was du geschrieben hast, aber lass uns das morgen besprechen. IRF wurden auch jetzt geplotted, Granger causality wurde auch gemacht. Gucke dir gerne auch meine Kommentare im Code, diese beschreiben die Resultate. Alles im allem sollten wir fast fertig sein und ich fange morgen mit dem Schreiben an. Ich lade auch die Screenshots von den Resultaten hoch. 
+
+Alex 22. Januar: Ich habe das Overleaf erstellt und bin gerade noch am schreiben: https://www.overleaf.com/8283938534mprnydhkrbff#87f42a
+
+## Methodological Procedure
 
 1) Check time series visually
 2) Check for unit roots
@@ -42,7 +50,7 @@ Alex 21. Januar: habe den Code noch mal überarbeiten, ist jetzt strukturierter.
 
 8) After Estimating a VAR or VECM, We Perform an Impulse Response Function (IRF) Analysis.
    
-
+## To-Do in Report
 
 Report: 
 - Introduction
