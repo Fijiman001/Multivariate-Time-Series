@@ -93,7 +93,7 @@ data work.data_filtered;
     where date_ >= input('2005-01-01', yymmdd10.) and date_ <= input('2019-01-01', yymmdd10.); /* Keep data between 2005 and 2019 */
 run;
 
-/*Wir sollten versuchen NAs mit 0 zu ersetzen?*/
+/*Set NA to 1 to deal with logarithm in costs*/
 data work.data_filtered;
     set work.data_filtered;
     array num_vars _numeric_;  /* Create an array of all numeric variables */
@@ -250,13 +250,11 @@ proc varmax data=work.data_filtered plots=(impulse forecast);
     output out=work.forecast lead=6; /* 6-month forecast */
 run;
 quit;
-/* Results are very interesting. Granger Causality von PRI auf cpi ist significant.
- Modell basierend auf HQC und minimum likelihood wäre VARMA(1,1), AR1 und MA1.
- VAR cross-coefficients not significant though.
- no cross-correlation of residuals
+/* Results are very interesting. Granger Causality exists from PRI to CPI.
+ Modell is based on HQC - minimal likelihood would be VARMA(1,1), AR1 und MA1.
+ VAR cross-coefficients not significant though, we see no cross-correlation of residuals
  The null hypothesis of the Granger causality test is that GROUP1 is influenced only by itself, and not by GROUP2
  */
-
 
 /*PPI robustness */
 proc varmax data=work.data_filtered plots=(impulse forecast);
