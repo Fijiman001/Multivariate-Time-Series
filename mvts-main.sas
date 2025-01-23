@@ -123,16 +123,33 @@ DATA work.data_filtered;
     SET work.data_filtered;
     cpi_logfd = DIF(Log(cpi_num));
     ppi_logfd = DIF(Log(ppi_num));
+    costs_log = Log(costs_num);
 RUN;
+
+/* replace missing values with 0 to make a viable time series */
+data work.data_filtered;
+    set work.data_filtered;
+    array num_vars _numeric_;  /* Create an array of all numeric variables */
+    do i = 1 to dim(num_vars);
+        if num_vars[i] = . then num_vars[i] = 0; /* Replace missing with 0, for costs */
+    end;
+    drop i;  /* Drop the loop variable */
+run;
 
 proc autoreg data=work.data_filtered;
     model cpi_logfd = / stationarity = (ADF, PHILLIPS, NG, KPSS=(KERNEL=NW auto));
     model ppi_logfd = / stationarity = (ADF, PHILLIPS, NG, KPSS=(KERNEL=NW auto));
+    model costs_log = / stationarity = (ADF, PHILLIPS, NG, KPSS=(KERNEL=NW auto));
 run;
 
 /*  cpi_logfd: we reject unit root now, and can thus use it in our VAR model
 	ppi_logfd: we reject unit root now, and can thus use it in our VAR model
  */
+
+PROC ARIMA DATA=work.data_filtered;
+    /* IDENTIFY VAR=ppi_num(1); */ /* if we want first difference directly*/
+    IDENTIFY VAR=costs_log;
+RUN; /* note that we see clear seasonality for costs */
 
 /* ------------------------------------------------------------------------------------------------- */
 
@@ -222,14 +239,12 @@ run;
 /* Estimate the VAR model and generate impulse response functions */
 proc varmax data=work.data_filtered plots=(impulse forecast);
     id date_ interval=month;
-    model costs_num cpi_logfd pri_num / p=12 lagmax=13 
+    model cpi_logfd pri_num costs_num / p=12 lagmax=13 
                                       minic=(p=8 q=8 type=HQC)
                                       print=(estimates diagnose impulse=ORTH);
-    causal group1=(costs_num) group2=(cpi_logfd);
     causal group1=(cpi_logfd) group2=(costs_num);
-    causal group1=(costs_num) group2=(pri_num);
     causal group1=(cpi_logfd) group2=(pri_num);
-    causal group1=(costs_num cpi_logfd) group2=(pri_num);
+    causal group1=(cpi_logfd pri_num) group2=(costs_num);
     causal group1=(pri_num) group2=(costs_num);
     causal group1=(pri_num) group2=(cpi_logfd);
     output out=work.forecast lead=6; /* 6-month forecast */
@@ -246,18 +261,46 @@ quit;
 /*PPI robustness */
 proc varmax data=work.data_filtered plots=(impulse forecast);
     id date_ interval=month;
-    model costs_num ppi_logfd pri_num / p=12 lagmax=13 
+    model ppi_logfd pri_num costs_num / p=12 lagmax=13 
                                       minic=(p=8 q=8 type=HQC)
                                       print=(estimates diagnose impulse=ORTH);
-    causal group1=(costs_num) group2=(ppi_logfd);
     causal group1=(ppi_logfd) group2=(costs_num);
-    causal group1=(costs_num) group2=(pri_num);
     causal group1=(ppi_logfd) group2=(pri_num);
-    causal group1=(costs_num ppi_logfd) group2=(pri_num);
+    causal group1=(ppi_logfd pri_num) group2=(costs_num);
     causal group1=(pri_num) group2=(costs_num);
     causal group1=(pri_num) group2=(ppi_logfd);
     output out=work.forecast lead=6; /* 6-month forecast */
 run;
 quit;
 
+/* with costs_log instead */
+proc varmax data=work.data_filtered plots=(impulse forecast);
+    id date_ interval=month;
+    model cpi_logfd pri_num costs_log/ p=12 lagmax=13 
+                                      minic=(p=8 q=8 type=HQC)
+                                      print=(estimates diagnose impulse=ORTH);
+    causal group1=(cpi_logfd) group2=(costs_log);
+    causal group1=(cpi_logfd) group2=(pri_num);
+    causal group1=(cpi_logfd pri_num) group2=(costs_log);
+    causal group1=(pri_num) group2=(costs_log);
+    causal group1=(pri_num) group2=(cpi_logfd);
+    output out=work.forecast lead=6; /* 6-month forecast */
+run;
+quit;
+/* No significant changes in results */
 
+/* costs_log and PPI */
+proc varmax data=work.data_filtered plots=(impulse forecast);
+    id date_ interval=month;
+    model ppi_logfd pri_num costs_log/ p=12 lagmax=13 
+                                      minic=(p=8 q=8 type=HQC)
+                                      print=(estimates diagnose impulse=ORTH);
+    causal group1=(ppi_logfd) group2=(costs_log);
+    causal group1=(ppi_logfd) group2=(pri_num);
+    causal group1=(ppi_logfd pri_num) group2=(costs_log);
+    causal group1=(pri_num) group2=(costs_log);
+    causal group1=(pri_num) group2=(ppi_logfd);
+    output out=work.forecast lead=6; /* 6-month forecast */
+run;
+quit;
+/* No significant changes in results */
