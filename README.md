@@ -1,24 +1,9 @@
 # Multivariate-Time-Series
 
-## Overleaf: https://www.overleaf.com/8283938534mprnydhkrbff#87f42a
-
-## Overview
-
-Die Daten, die für SAS genutzt werden nennen sich 'merged_clean'. Der cleaning Code ist in der R file.
-
-Der SAS Code, der für die eigentliche Analyse genutzt wird, ist der "mvts-main.sas" Code. Ich habe da schon mal die Daten importiert und umgewandelt und die Plots erstellt. 
-
-Cerstin, 20. Januar: In mvts-main wurden die unit root tests mit log-difference wiederholt für alle drei variablen. Ich suche noch nach einem geigneten Filter für Costs, deswegen sind die daten gerade erst in der log difference.
-
-Alex, 20. Januar: Bin am VAR model programmieren und cointegration tests am machen. Zeitspanne der Data wurde reduziert auf 2005 bis ende 2018 ("data_filtered"), da wir für die Zeit PRI und Cost daten haben. Ich habe das Daten Format der .csv file geändert und den Code, sodass SAS die Daten jetzt richtig lest. WICHTIG!!!!: benutze bitte die neue Datei mit dem Code, darin wurden die Daten neu Formatiert. Code für Cointegration muss nich geschrieben werde, die Daten umformatierung hat zu lange gedauert...
-
-Alex, 21. Januar: VAR model estimation und kointegrations Tests Code läuft jetzt, VAR Residuen analyse wurde auch programmiert. Was fehlt sind noch die Impulse Response Funktions. Unsere Resultate zeigen jedoch, dass wir (im Moment mit den jetzigen Daten und den transformationen die wir gemacht haben) keine signifikante Korrelation zwischen Costs und CPI bzw. zwischen PRI und CPI sehen. Können wir später besprechen. Robustness mit PPI und mit daten bis 2023? sollte noch gemacht werden, vielleicht nur zwischen CPI und PRI oder PPI und PRI.
-
-Cerstin, 21. Januar: Ich habe mir sein empirical example noch mal angeschaut und den folgenden Workflow erarbeitet, wonach die analyse stattfinden sollte:
-
-Alex 21. Januar: habe den Code noch mal überarbeiten, ist jetzt strukturierter. Ich sehe deine Checklist / steps to follow, und do Code macht eigentlich, was du geschrieben hast, aber lass uns das morgen besprechen. IRF wurden auch jetzt geplotted, Granger causality wurde auch gemacht. Gucke dir gerne auch meine Kommentare im Code, diese beschreiben die Resultate. Alles im allem sollten wir fast fertig sein und ich fange morgen mit dem Schreiben an. Ich lade auch die Screenshots von den Resultaten hoch. 
-
-Alex 22. Januar: Ich habe das Overleaf erstellt und bin gerade noch am schreiben: https://www.overleaf.com/8283938534mprnydhkrbff#87f42a
+## Possible Extensions and Improvements
+- Model using maximum observed perceived risk index not using mean.
+- Refine Impulse Response Function Graphs and plotted Confidence Intervals, double check HAC errors are used.
+- Repeat Study with extended data and or more spatial granularity.
 
 ## Methodological Procedure
 
